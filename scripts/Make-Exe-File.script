@@ -1,0 +1,3 @@
+CD MelODeeFx:sources
+OMA PT-Volume-Meter.asm -o MelODeeFx:executables/PT-Volume-Meter -c c -m >RAM:make-output.txt
+CD /
