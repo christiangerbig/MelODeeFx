@@ -4,77 +4,13 @@
 ; 1.2+
 
 
-; pt_ciatiming_enabled: TRUE = playback by using the CIA-B timer A interrupt 
-; pt_ciatiming_enabled: FALSE = playback by using the VBlank interrupt
-
-; For loop samples, the repeat point in the module is specified in words.
-
-; Samples are played for the first time from the beginning to the end of the
-; loop and then from the repeat point specified in the module in words.
-; If the repeat point = 0, but a repeat length is specified, then the sample
-; is played for the first time from the start to the sample end and then the
-; loop is played.
-; For loop samples, the repeat length is now checked for > 1 word. Thus
-; loop samples with the repeat point = 0 are also played correctly
-
-; RetrigNote/Note Delay command: DMA waiting loops completely via CIA-B timer B
-;																Interrupt generated
-; Use of the CIA-A level 2 interrupt no longer necessary
-
-; The module is faded out when the right mouse button is pressed.
-; pt_music_fader_enabled = TRUE and the corresponding code is enabled
-
-; It is possible to use an audio channel as a metronome.
-
-; The Fasttracker is not compatible with the Protracker for oneshot samples.
-; It writes a repeat length of 0 into the module structure. To use Fasttracker
-; oneshot samples, a repeat length of 0 is automatically set to 1 during
-; initialization.
-
-; If the labels PROTRACKER_VERSION_2 or PROTRACKER_VERSION_3 are set, the
-; corresponding code sections are enabled.
-
-
-; Supported fx commands
-;	0 - Normal play or Arpeggio
-;	1 - Portamento Up
-;	2 - Portamento Down
-;	3 - Tone Portamento
-;	4 - Vibrato
-;	5 - Tone Portamento + Volume Slide
-;	6 - Vibrato + Volume Slide
-;	7 - Tremolo
-;	8 - NOT USED
-;	9 - Set Sample Offset
-;	A - Volume Slide
-;	B - Position Jump
-;	C - Set Volume
-;	D - Pattern Break
-;	E - Extended commands
-;		E0 - Set Filter
-;		E1 - Fine Portamento Up
-;		E2 - Fine Portamento Down
-;		E3 - Set Glissando Control
-;		E4 - Set Vibrato Waveform
-;		E5 - Set Sample Finetune
-;		E6 - Jump to Loop
-;		E7 - Set Tremolo Waveform
-;		E8 - NOT USED / Karplus Strong
-;		E9 - Retrig Note
-;		EA - Fine Volume Slide Up
-;		EB - Fine Volume Slide Down
-;		EC - Note Cut
-;		ED - Note Delay
-;		EE - Pattern Delay
-;		EF - Invert Loop
-;	F - Set Speed
-
-
 ; Two rotating cuboids represent the left and the right audio channel.
 ; The height of each cuboid is the volume for each audio channel pair (left/right).
+; The volume peek is automatically decreased.
+; RMB activates xz center rotation.
 
 
-; Execution time 68000: 216 rasterlines
+; Execution time 68000: 227 rasterlines
 
 
 	MC68000
@@ -312,8 +248,8 @@ bv_rotate_x_center_radius	EQU (visible_pixels_number-56)/2
 bv_rotate_x_center_center	EQU 28+((visible_pixels_number-56)/2)
 bv_rotate_x_center_angle_speed	EQU 2
 
-bv_rotate_z_center_radius	EQU 100*8
-bv_rotate_z_center_center	EQU 100*8
+bv_rotate_z_center_radius	EQU 240*8
+bv_rotate_z_center_center	EQU 240*8
 bv_rotate_z_center_angle_speed	EQU 1
 
 ; Volume-Meter
