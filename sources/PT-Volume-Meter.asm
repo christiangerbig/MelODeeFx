@@ -4,6 +4,8 @@
 ; 1.2+
 
 
+; Rotating filled objects with a diffuse lightsource.
+; Every object has its own shading table.
 ; Two rotating cuboids represent the left and the right audio channel.
 ; The height of each cuboid is the volume for each audio channel pair (left/right).
 ; The volume peek is automatically decreased.
@@ -643,8 +645,8 @@ volume_meter
 	rts
 
 ; Input
-; a0.l	Channel volume peak
-; a1.l	Object coordinates
+; a0.l	Pointer channel volume peak
+; a1.l	Pointer table object x,y,z coordinates
 ; Result
 	CNOP 0,4
 set_object_heigth
@@ -706,10 +708,10 @@ bv_object1_rotate_xz_center
 	rts
 
 ; Input
-; a1.l	rotation x center angle
-; a2.l  rotation x center
-; a4.l	rotation z center angle
-; a5.l	rotation z center
+; a1.l	Pointer rotation x center angle
+; a2.l  Pointer rotation x center
+; a4.l	Pointer rotation z center angle
+; a5.l	Pointer rotation z center
 ; Result
 	CNOP 0,4
 bv_rotate_xz_center
@@ -797,10 +799,9 @@ bv_object1_rotation
 	movem.l (a7)+,a4-a6
 	rts
 
-
 ; Input
-; a0.l	Pointer object coordinates
-; a1.l	Pointer coordinates after rotation
+; a0.l	Pointer table object coordinates
+; a1.l	Pointer table coordinates after rotation
 ; a4.w	Rotation z center
 ; a5.w	Rotation x center
 ; d4.l	High word: sin(a), low word: cos(a)
@@ -852,10 +853,10 @@ bv_draw_object1_lines
 
 
 ; Input
-; a1.l	X,y,z coordinates
+; a1.l	Pointer table x,y,z coordinates
 ; a2.l	Playfield address
-; a4.l	Color palette offset in cl
-; a5.l	Object shading table
+; a4.l	Pointer table color palette offset in cl
+; a5.l	Pointer table object shading RGB colours
 ; Result
 	CNOP 0,4
 bv_draw_lines
