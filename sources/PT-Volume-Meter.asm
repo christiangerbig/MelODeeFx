@@ -557,18 +557,23 @@ beam_routines
 	bsr	pf1_set_dual_playfield
 	bsr	pf2_swap_playfield
 	bsr	pf2_set_dual_playfield
+
 	bsr	get_channels_volume
 	bsr	volume_meter
+
 	bsr	bv_draw_object1_lines
 	bsr	bv_draw_object2_lines
+
 	bsr	bv_fill_playfield1
 	bsr	bv_object1_rotate_xz_center
 	bsr	bv_object1_rotation
 	bsr	bv_clear_playfield1
+
 	bsr	bv_fill_playfield2
 	bsr	bv_object2_rotate_xz_center
 	bsr	bv_object2_rotation
 	bsr	bv_clear_playfield2
+
 	bsr	mouse_handler
 	btst	#CIAB_GAMEPORT0,CIAPRA(a4) ; LMB pressed ?
 	bne.s	beam_routines
@@ -598,13 +603,13 @@ get_channels_volume
 ; left channels
 	move.w	vm_left_channel_volume(a3),d1
 	lea	pt_audchan2temp(pc),a0
-	tst.b	n_notetrigger(a0)	; new note?
+	tst.b	n_notetrigger(a0)	; new note ?
 	bne.s	get_channel_period_skip1
 	move.b	#FALSE,n_notetrigger(a0)
 	move.w	n_currentvolume(a0),d1
 get_channel_period_skip1
 	lea	pt_audchan3temp(pc),a0
-	tst.b	n_notetrigger(a0)	; new note?
+	tst.b	n_notetrigger(a0)	; new note ?
 	bne.s	get_channel_period_skip2
 	move.b	#FALSE,n_notetrigger(a0)
 	cmp.w	n_currentvolume(a0),d1
@@ -615,13 +620,13 @@ get_channel_period_skip2
 ; right channels
 	move.w	vm_right_channel_volume(a3),d1
 	lea	pt_audchan1temp(pc),a0
-	tst.b	n_notetrigger(a0)	; new note?
+	tst.b	n_notetrigger(a0)	; new note ?
 	bne.s	get_channel_period_skip3
 	move.b	#FALSE,n_notetrigger(a0)
 	move.w	n_currentvolume(a0),d1
 get_channel_period_skip3
 	lea	pt_audchan4temp(pc),a0
-	tst.b	n_notetrigger(a0)	; new note?
+	tst.b	n_notetrigger(a0)	; new note ?
 	bne.s	get_channel_period_skip4
 	move.b	#FALSE,n_notetrigger(a0)
 	cmp.w	n_currentvolume(a0),d1
@@ -666,6 +671,7 @@ set_cuboid_heigth_skip
 	rts
 
 
+; Object 1
 	CNOP 0,4
 bv_clear_playfield1
 	movem.l a3-a6,-(a7)
@@ -845,17 +851,16 @@ bv_draw_object1_lines
 	lea	bv_rotation_xyz_coordinates1(pc),a1
 	move.l	pf1_construction2(a3),a2
 	move.l	cl1_construction2(a3),a4
-	ADDF.W	cl1_COLOR00+WORD_SIZE,a4
+	ADDF.W	cl1_COLOR00+WORD_SIZE,a4 ; offfset colour palette offset in cl
 	lea	bv_object1_color_table(pc),a5
 	bsr.s	bv_draw_lines
 	movem.l (a7)+,a3-a5
 	rts
 
-
 ; Input
 ; a1.l	Pointer table x,y,z coordinates
 ; a2.l	Playfield address
-; a4.l	Pointer table color palette offset in cl
+; a4.l	Pointer table colour palette offset in cl
 ; a5.l	Pointer table object shading RGB colours
 ; Result
 	CNOP 0,4
@@ -898,11 +903,11 @@ bv_draw_lines_loop1
 	moveq	#1,d0			; D = 1 to avoid division by zero
 bv_draw_lines_skip1
 	divu.w	d0,d1			; RtdRGB = (kdRGB*EpRGB)/(D-D0)
-	move.w	(a0),d7			; face color number
+	move.w	(a0),d7			; face colour number
 	move.w	d7,d2
 	MULUF.W	LONGWORD_SIZE,d2
 	MULUF.W	WORD_SIZE,d1
-	move.w	(a7,d1.w),(a4,d2.w)	; color
+	move.w	(a7,d1.w),(a4,d2.w)	; RGB4 face colour
 	move.w	object_info_lines_number-object_info_face_color(a0),d6 ; number of lines
 bv_draw_lines_loop2
 	move.w	(a5)+,d0		; p1,p2 starts
@@ -970,6 +975,7 @@ bv_fill_playfield1
 	rts
 
 
+; Object 2
 	CNOP 0,4
 bv_clear_playfield2
 	movem.l a3-a6,-(a7)
@@ -1055,7 +1061,7 @@ bv_draw_object2_lines
 	lea	bv_rotation_xyz_coordinates2(pc),a1
 	move.l	pf2_construction2(a3),a2
 	move.l	cl1_construction2(a3),a4
-	ADDF.W	cl1_COLOR08+WORD_SIZE,a4
+	ADDF.W	cl1_COLOR08+WORD_SIZE,a4 ; offset colour palette in cl
 	lea	bv_object2_color_table(pc),a5
 	bsr	bv_draw_lines
 	movem.l (a7)+,a3-a5
@@ -1266,7 +1272,7 @@ bv_rotation_xyz_coordinates2
 	DC.B "$VER: "
 	DC.B "PT-Volume-Meter"
 	DC.B "1.0 "
-	DC.B "(10.4.26) "
+	DC.B "(11.4.26) "
 	EVEN
 
 
