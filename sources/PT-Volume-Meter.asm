@@ -650,7 +650,7 @@ volume_meter
 	rts
 
 ; Input
-; a0.l	Pointer channel volume peak
+; a0.l	Pointer variable channel volume peak
 ; a1.l	Pointer table object x,y,z coordinates
 ; Result
 	CNOP 0,4
@@ -714,10 +714,10 @@ bv_object1_rotate_xz_center
 	rts
 
 ; Input
-; a1.l	Pointer rotation x center angle
-; a2.l  Pointer rotation x center
-; a4.l	Pointer rotation z center angle
-; a5.l	Pointer rotation z center
+; a1.l	Pointer variable rotation x center angle
+; a2.l  Pointer variable rotation x center
+; a4.l	Pointer variable rotation z center angle
+; a5.l	Pointer variable rotation z center
 ; Result
 	CNOP 0,4
 bv_rotate_xz_center
@@ -861,7 +861,7 @@ bv_draw_object1_lines
 ; a1.l	Pointer table x,y,z coordinates
 ; a2.l	Playfield address
 ; a4.l	Pointer table colour palette offset in cl
-; a5.l	Pointer table object shading RGB colours
+; a5.l	Pointer table object shading RGB4 colours
 ; Result
 	CNOP 0,4
 bv_draw_lines
