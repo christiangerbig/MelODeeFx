@@ -4,12 +4,15 @@
 ; 1.2+
 
 
+; Code optimized for O.M.A. 2.0 Assembler
+
+
 ; Rotating filled objects with a diffuse lightsource.
-; Every object has its own shading table.
-; Two rotating cuboids represent the left and the right audio channel.
-; The height of each cuboid is the volume for each audio channel pair (left/right).
-; The volume peek is automatically decreased.
-; RMB activates xz center rotation.
+; Two rotating objects represent the left and the right audio channel.
+; The height of each object is the max volume for each audio channel pair (left/right).
+; The volume peak is automatically decreased.
+; Each object has its own shading table.
+; RMB activates xz center rotation for both objects.
 
 
 ; Execution time 68000: 227 rasterlines
@@ -255,7 +258,7 @@ bv_rotate_z_center_center	EQU 240*8
 bv_rotate_z_center_angle_speed	EQU 1
 
 ; Volume-Meter
-vm_cuboid_min_heigth		EQU 14
+vm_object_min_heigth		EQU 14
 
 
 color_values_number1		EQU bv_shade_values_number
@@ -466,7 +469,7 @@ init_main
 	PT_INIT_FINETUNE_TABLE_STARTS
 
 
-	CNOP 0,2
+	CNOP 0,4
 init_colors
 	CPU_INIT_COLOR COLOR00,1,pf1_rgb4_color_table
 	rts
@@ -656,19 +659,19 @@ volume_meter
 ; no return value
 	CNOP 0,4
 set_object_heigth
-	moveq	#vm_cuboid_min_heigth,d1
+	moveq	#vm_object_min_heigth,d1
 	add.w	(a0),d1
 	move.w	d1,d0
-	lsl.w	#3,d0
-	neg.w	d0
+	lsl.w	#3,d0			; factor 8 for smoother movement
+	neg.w	d0			; only negative z coordinates
 	move.w	d0,2(a1)		; p0(z)
 	move.w	d0,8(a1)		; p1(z)
 	move.w	d0,26(a1)		; p4(z)
 	move.w	d0,32(a1)		; p5(z)
 	sub.w	#2*8,d1			; decrease height
-	bmi.s	set_cuboid_heigth_skip
+	bmi.s	set_object_heigth_skip
 	move.w	d1,(a0)			; new height
-set_cuboid_heigth_skip
+set_object_heigth_skip
 	rts
 
 
