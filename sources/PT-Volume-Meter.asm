@@ -653,6 +653,7 @@ volume_meter
 ; a0.l	Pointer variable channel volume peak
 ; a1.l	Pointer table object x,y,z coordinates
 ; Result
+; no return value
 	CNOP 0,4
 set_object_heigth
 	moveq	#vm_cuboid_min_heigth,d1
@@ -719,6 +720,7 @@ bv_object1_rotate_xz_center
 ; a4.l	Pointer variable rotation z center angle
 ; a5.l	Pointer variable rotation z center
 ; Result
+; no return value
 	CNOP 0,4
 bv_rotate_xz_center
 	move.w	(a1),d1			; x center angle
@@ -814,6 +816,7 @@ bv_object1_rotation
 ; d5.l	High word: sin(b), low word: cos(b)
 ; d6.l	High word: sin(c), low word: cos(c)
 ; Result
+; no return value
 	CNOP 0,4
 bv_rotate_object
 	add.w	#bv_rotation_d*8,a4
@@ -863,6 +866,7 @@ bv_draw_object1_lines
 ; a4.l	Pointer table colour palette offset in cl
 ; a5.l	Pointer table object shading RGB4 colours
 ; Result
+; no return value
 	CNOP 0,4
 bv_draw_lines
 	move.l	a7,save_a7(a3)
