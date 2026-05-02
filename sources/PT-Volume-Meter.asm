@@ -74,8 +74,8 @@ text_output_enabled     	EQU FALSE
 
 ; PT-Replay
 pt_ciatiming_enabled		EQU TRUE
-pt_usedfx			EQU pt_allusedfx
-pt_usedefx			EQU pt_allusedefx
+pt_usedfx			EQU pt_cmdbits
+pt_usedefx			EQU pt_ecmdbits
 pt_mute_enabled			EQU FALSE
 pt_music_fader_enabled		EQU FALSE
 pt_fade_out_delay		EQU 2	; ticks
