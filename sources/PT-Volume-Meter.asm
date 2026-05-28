@@ -471,7 +471,7 @@ init_main
 
 	CNOP 0,4
 init_colors
-	CPU_INIT_COLOR COLOR00,1,pf1_rgb4_color_table
+	CPU_LOAD_COLORMAP COLOR00,1,pf1_rgb4_color_table
 	rts
 
 
@@ -518,9 +518,9 @@ cl1_init_copperlist
 
 	CNOP 0,4
 cl1_init_colors
-	COP_INIT_COLOR COLOR00,4,pf1_rgb4_color_table
+	COP_LOAD_COLORMAP COLOR00,4,pf1_rgb4_color_table
 
-	COP_INIT_COLOR COLOR08,4,pf2_rgb4_color_table	; Dual playfield colours
+	COP_LOAD_COLORMAP COLOR08,4,pf2_rgb4_color_table	; Dual playfield colours
 	rts
 
 	COP_INIT_BITPLANE_POINTERS cl1
