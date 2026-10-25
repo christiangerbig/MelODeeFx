@@ -1,3 +1,4 @@
 CD MelODeeFx:sources
 OMA PT-Volume-Meter.asm -o MelODeeFx:executables/PT-Volume-Meter -c c -m >RAM:make-output.txt
+OMA PT-Sine-Bars-Equalizer.asm -o MelODeeFx:executables/PT-Sine-Bars-Equalizer -c c -m >RAM:make-output.txt
 CD /
