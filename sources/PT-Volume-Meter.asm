@@ -470,16 +470,16 @@ init_main
 
 
 	CNOP 0,4
-init_colors
-	CPU_LOAD_COLORMAP COLOR00,1,pf1_rgb4_color_table
-	rts
-
-
-	CNOP 0,4
 init_CIA_timers
 
 ; PT-Replay
 	PT_INIT_TIMERS
+	rts
+
+
+	CNOP 0,4
+init_colors
+	CPU_LOAD_COLORMAP COLOR00,1,pf1_rgb4_color_table
 	rts
 
 
