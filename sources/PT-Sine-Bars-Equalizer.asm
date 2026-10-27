@@ -212,9 +212,9 @@ segments_number1		EQU sb_bars_number
 
 ct_size1			EQU color_values_number1*segments_number1
 
-tb_color_table_size		EQU ct_size1*2
+sb_color_table_size		EQU ct_size1*2
 
-extra_memory_size		EQU tb_color_table_size*WORD_SIZE
+extra_memory_size		EQU sb_color_table_size*WORD_SIZE
 
 
 	INCLUDE "except-vectors.i"
