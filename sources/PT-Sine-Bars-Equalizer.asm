@@ -497,6 +497,7 @@ sb_brighten_bars
 ; a1.l	Source: Colour table bright bar
 ; a2.l	Destination: Colours buffer
 ; Result
+; no return value
 	CNOP 0,4
 sb_check_audio_channel
 	tst.b	n_notetrigger(a0) ; new note played ?
