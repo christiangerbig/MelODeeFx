@@ -7,11 +7,14 @@
 ; Code optimized for O.M.A. 2.0 Assembler
 
 
-; Glowing bars are moving up and down with a sine function controlled by the
-; speed of the music
+; A collection of copper effects with different priorities on one display
+; Layer 1: Glowing bars are moving up and down with a sine function controlled
+; by the music
+; Layer 2: VU meters visualize the volume of each channel
+; Layer 3: Vertical colourscroll
 
 
-; Execution time 68000: 26 rasterlines
+; Execution time 68000: 97 rasterlines
 
 
 	MC68000
@@ -75,7 +78,7 @@ pt_music_fader_enabled		EQU FALSE
 pt_fade_out_delay		EQU 2	; ticks
 pt_split_module_enabled		EQU FALSE
 pt_track_notes_played_enabled	EQU TRUE
-pt_track_volumes_enabled	EQU FALSE
+pt_track_volumes_enabled	EQU TRUE
 pt_track_periods_enabled	EQU FALSE
 pt_track_data_enabled		EQU FALSE
 	IFD PROTRACKER_VERSION_3
@@ -177,44 +180,54 @@ color00_bits			EQU $012
 cl2_display_x_size		EQU 0
 cl2_display_width		EQU cl2_display_x_size/8
 cl2_display_y_size		EQU 112
-cl2_hstart1			EQU 12
+cl2_hstart1			EQU HSTART_320_PIXEL-2
 cl2_vstart1			EQU VSTART_256_LINES
 cl2_hstart2			EQU 0
 cl2_vstart2			EQU beam_position&CL_Y_WRAPPING
+cl2_column_width		EQU 80
 
 sine_table_length		EQU 256
 
-; Sine-Bars
-sb_bars_number			EQU 4
-sb_bar_height			EQU 16
-sb_y_radius			EQU (cl2_display_y_size-sb_bar_height)/2
-sb_y_center			EQU (cl2_display_y_size-sb_bar_height)/2
-sb_y_angle_speed		EQU 2
-sb_y_distance			EQU 8
-sb_y_distance_min		EQU 8
-sb_y_distance_angle_speed	EQU 4
-sb_y_distance_step		EQU 3
-sb_clear_y_size			EQU 112
+; Vert-Colorscroll
+vcs_bar_height			EQU 64
+vcs_bars_number			EQU 2
+vcs_step			EQU 1
+vcs_speed			EQU 1
+
+; Glopwing-Sine-Bars
+gsb_bars_number			EQU 4
+gsb_bar_height			EQU 16
+gsb_y_radius			EQU (cl2_display_y_size-gsb_bar_height)/2
+gsb_y_center			EQU (cl2_display_y_size-gsb_bar_height)/2
+gsb_y_angle_speed		EQU 2
+gsb_y_distance			EQU 8
+gsb_y_distance_min		EQU 8
+gsb_y_distance_angle_speed	EQU 4
+gsb_y_distance_step		EQU 3
 
 ; Bar-Fader
 bf_rgb4_start_color		EQU 0
 bf_rgb4_color_table_offset	EQU 0
-bf_rgb4_colors_number		EQU (sb_bar_height/2)*sb_bars_number
+bf_rgb4_colors_number		EQU (gsb_bar_height/2)*gsb_bars_number
 
 ; Bar-Fader-Out
 bfo_rgb4_fader_speed		EQU 1
 bfo_delay			EQU 2	; ticks
 
 
-color_step1			EQU 16/(sb_bar_height/2)
-color_values_number1		EQU sb_bar_height/2
-segments_number1		EQU sb_bars_number
+color_step1			EQU 16/(vcs_bar_height/2)
+color_values_number1		EQU vcs_bar_height/2
+segments_number1		EQU vcs_bars_number*2
+color_step2			EQU 16/(gsb_bar_height/2)
+color_values_number2		EQU gsb_bar_height/2
+segments_number2		EQU gsb_bars_number
 
 ct_size1			EQU color_values_number1*segments_number1
+ct_size2			EQU color_values_number2*segments_number2
 
-sb_color_table_size		EQU ct_size1*2
+gsb_color_table_size		EQU ct_size2*2
 
-extra_memory_size		EQU sb_color_table_size*WORD_SIZE
+extra_memory_size		EQU gsb_color_table_size*WORD_SIZE
 
 
 	INCLUDE "except-vectors.i"
@@ -248,9 +261,16 @@ cl1_copperlist_size		RS.B 0
 
 cl2_extension1			RS.B 0
 
-cl2_ext1_WAIT			RS.L 1
-cl2_ext1_COLOR00		RS.L 1
-cl2_ext1_NOOP			RS.L 1
+cl2_ext1_WAIT1			RS.L 1
+cl2_ext1_COLOR00_1		RS.L 1
+cl2_ext1_WAIT2			RS.L 1
+cl2_ext1_COLOR00_2		RS.L 1
+cl2_ext1_WAIT3			RS.L 1
+cl2_ext1_COLOR00_3		RS.L 1
+cl2_ext1_WAIT4			RS.L 1
+cl2_ext1_COLOR00_4		RS.L 1
+cl2_ext1_WAIT5			RS.L 1
+cl2_ext1_COLOR00_5		RS.L 1
 
 cl2_extension1_size		RS.B 0
 
@@ -326,9 +346,12 @@ spr7_y_size2			EQU 0
 		INCLUDE "music-tracker/pt3-variables.i"
 	ENDC
 
-; Sine-Bars
-sb_y_angle			RS.W 1
-sb_y_distance_angle		RS.W 1
+; Vert-Colorscroll
+vcs_color_table_start		RS.W 1
+
+; Glowing-Sine-Bars
+gsb_y_angle			RS.W 1
+gsb_y_distance_angle		RS.W 1
 
 ; Bars-Fader
 bf_rgb4_colors_counter		RS.W 1
@@ -337,7 +360,6 @@ bf_rgb4_copy_colors_active	RS.W 1
 ; Bars-Fader-Out
 bfo_rgb4_active			RS.W 1
 bfo_counter			RS.W 1
-
 
 variables_size			RS.B 0
 
@@ -358,10 +380,13 @@ init_main_variables
 		PT3_INIT_VARIABLES
 	ENDC
 
-; Sine-Bars
+; Vert-Colorscroll
 	moveq	#TRUE,d0
-	move.w	d0,sb_y_angle(a3)	; 0°
-	move.w	d0,sb_y_distance_angle(a3) ; 0°
+	move.w	d0,vcs_color_table_start(a3)
+
+; Glowing-Sine-Bars
+	move.w	d0,gsb_y_angle(a3)	; 0°
+	move.w	d0,gsb_y_distance_angle(a3) ; 0°
 
 ; Bars-Fader
 	move.w	#bf_rgb4_colors_number*3,bf_rgb4_colors_counter(a3)
@@ -434,7 +459,42 @@ cl2_init_copperlist
 	COP_LISTEND
 	rts
 
-	COP_INIT_COLOR00_SCREEN cl2,YWRAP
+	CNOP 0,4
+cl2_init_color00_screen
+	move.l	#(((cl2_vstart1<<24)|(((cl2_hstart1/4)*2)<<16))|$10000)|$fffe,d0 ; CWAIT
+	move.l	#(COLOR00<<16)|color00_bits,d1
+	move.l	#(cl2_column_width/2)<<16,d4
+	move.l	#1<<16,d5		; CWAIT bit
+	move.l	#1<<24,d6		; next rasterline
+	MOVEF.W	cl2_display_y_size-1,d7
+cl2_init_color00_screen_loop
+; Channel 1
+	move.l	d0,(a0)+		; CWAIT
+	move.l	d1,(a0)+		; COLOR00
+; Channel 2
+	move.l	d0,d2			; store horizontal position
+	add.l	d4,d2			; next channel horizontal position
+	or.l	d5,d2			; set CWAIT bit
+	move.l	d2,(a0)+		; CWAIT
+	move.l	d1,(a0)+		; COLOR00
+; Channel 3
+	add.l	d4,d2
+	or.l	d5,d2
+	move.l	d2,(a0)+		; CWAIT
+	move.l	d1,(a0)+		; CMOVE COLOR00
+; Channel 4
+	add.l	d4,d2
+	or.l	d5,d2
+	move.l	d2,(a0)+		; CWAIT
+	move.l	d1,(a0)+		; CMOVE COLOR00
+; Horizontal Blank
+	add.l	d4,d2
+	or.l	d5,d2
+	move.l	d2,(a0)+		; CWAIT
+	move.l	d1,(a0)+		; CMOVE COLOR00
+	add.l	d6,d0			; next rasterline
+	dbf	d7,cl2_init_color00_screen_loop
+	rts
 
 	COP_INIT_COPINT cl2,cl2_hstart2,cl2_vstart2,YWRAP
 
@@ -444,7 +504,7 @@ cl2_init_copperlist
 	CNOP 0,4
 main
 	bsr.s	no_sync_routines
-		bsr.s	beam_routines
+	bsr.s	beam_routines
 	rts
 
 
@@ -458,11 +518,12 @@ beam_routines
 	bsr	wait_copint
 	bsr.s	cl2_swap_copperlist
 	bsr.s	cl2_set_copperlist
-	bsr.s	sb_cl2_clear_copperlist
-	bsr     sb_brighten_bars
+	bsr	check_audio_channels
+	bsr	vert_colorscroll
+	bsr	display_vu_meters
 	bsr	rgb4_bars_fader_out
-	bsr	sb_init_mirror_color_table
-	bsr	sb_get_y_coordinates
+	bsr	gsb_init_mirror_color_table
+	bsr	gsb_get_y_coordinates
 	btst	#CIAB_GAMEPORT0,CIAPRA(a4) ; LMB pressed ?
 	bne.s	beam_routines
 	rts
@@ -474,47 +535,136 @@ beam_routines
 	SET_COPPERLIST cl2
 
 
-	CLEAR_COLOR00_SCREEN sb,cl2,construction2,extension1,16
-
-
 	CNOP 0,4
-sb_brighten_bars
+check_audio_channels
+	move.l	a4,-(a7)
 	lea	pt_audchan1temp(pc),a0
-	lea	sb_rgb4_color_table2(pc),a1
-	lea	sb_rgb4_color_table(pc),a2
-	bsr.s	sb_check_audio_channel
+	lea	vm_channels_peak(pc),a1
+	lea	gsb_rgb4_color_table2(pc),a2
+	lea	gsb_rgb4_color_table(pc),a4
+	bsr.s	check_audio_channel
 	lea	pt_audchan2temp(pc),a0
-	bsr.s	sb_check_audio_channel
+	bsr.s	check_audio_channel
 	lea	pt_audchan3temp(pc),a0
-	bsr.s	sb_check_audio_channel
+	bsr.s	check_audio_channel
 	lea	pt_audchan4temp(pc),a0
-	bsr.s	sb_check_audio_channel
+	bsr.s	check_audio_channel
+	move.l	(a7)+,a4
 	rts
-
 
 ; Input
 ; a0.l	Temporary audio channel structure
-; a1.l	Source: Colour table bright bar
-; a2.l	Destination: Colours buffer
+; a1.l	Volume prak of each channel
+; a2.l	Source: Colour table bright bar
+; a4.l	Destination: Colours buffer
 ; Result
 ; no return value
 	CNOP 0,4
-sb_check_audio_channel
-	tst.b	n_notetrigger(a0) ; new note played ?
-	bne.s	sb_check_audio_channel_skip1
+check_audio_channel
+	tst.b	n_notetrigger(a0)	; new note played ?
+	bne.s	check_audio_channel_skip1
 	move.b	#FALSE,n_notetrigger(a0)
-	REPT sb_bar_height/2
-	move.w	(a1)+,(a2)+		; RGB4
+	moveq	#0,d0
+	move.b	n_volume(a0),d0
+	move.w	d0,(a1)+		; store channel volume
+	REPT gsb_bar_height/2
+	move.w	(a2)+,(a4)+		; RGB4
 	ENDR
 	move.w	#bf_rgb4_colors_number*3,bf_rgb4_colors_counter(a3)
 	clr.w	bfo_rgb4_active(a3)
 	move.w	#bfo_delay,bfo_counter(a3)
-	bra.s	sb_check_audio_channel_skip2
+	bra.s	check_audio_channel_skip2
 	CNOP 0,4
-sb_check_audio_channel_skip1
-	ADDF.W  (sb_bar_height/2)*WORD_SIZE,a1 ; skip bar colours
-	ADDF.W  (sb_bar_height/2)*WORD_SIZE,a2
-sb_check_audio_channel_skip2
+check_audio_channel_skip1
+	addq.w	#WORD_SIZE,a1		; next channel volume
+	ADDF.W  (gsb_bar_height/2)*WORD_SIZE,a2 ; skip bar bright colours
+	ADDF.W  (gsb_bar_height/2)*WORD_SIZE,a4 ; skip colours buffer
+check_audio_channel_skip2
+	rts
+
+
+	CNOP 0,4
+vert_colorscroll
+	move.w	vcs_color_table_start(a3),d3
+	move.w	d3,d0		
+	addq.w	#vcs_speed*WORD_SIZE,d0	; increase table start
+	MOVEF.W ct_size1*WORD_SIZE,d5
+	cmp.w	d5,d0			; end of table ?
+	blt.s	vert_colorscroll_skip1
+	sub.w	d5,d0			; reset table start
+vert_colorscroll_skip1
+	move.w	d0,vcs_color_table_start(a3)
+	lea	vcs_rgb4_color_table(pc),a0
+	move.l	cl2_construction2(a3),a1
+	lea	cl2_extension1_entry+WORD_SIZE(a1),a1
+	move.w	#cl2_extension1_size,a2
+	MOVEF.W cl2_display_y_size-1,d7
+vert_colorscroll_loop
+	move.w	(a0,d3.w),d0		; RGB4
+	move.w	d0,cl2_ext1_COLOR00_1(a1) ; store colours in cl
+	move.w	d0,cl2_ext1_COLOR00_2(a1)
+	move.w	d0,cl2_ext1_COLOR00_3(a1)
+	move.w	d0,cl2_ext1_COLOR00_4(a1)
+	add.l	a2,a1			; next line in cl
+	addq.w	#vcs_step*WORD_SIZE,d3	; next entry
+	cmp.w	d5,d3			; end of table ?
+	blt.s	vert_colorscroll_skip2
+	sub.w	d5,d3			; reset table start
+vert_colorscroll_skip2
+	dbf	d7,vert_colorscroll_loop
+	rts
+
+
+	CNOP 0,4
+display_vu_meters
+	movem.l	a4-a5,-(a7)
+	lea	vm_channels_peak(pc),a0
+	lea	vm_rgb4_color_table1(pc),a2
+	move.l	cl2_construction2(a3),a4
+	ADDF.W	cl2_extension1+cl2_ext1_COLOR00_1+WORD_SIZE,a4
+	move.w	#cl2_extension1_size,a5
+	bsr.s	vm_display_channel_peak
+	lea	vm_rgb4_color_table2(pc),a2
+	move.l	cl2_construction2(a3),a4
+	ADDF.W	cl2_extension1+cl2_ext1_COLOR00_2+WORD_SIZE,a4
+	bsr.s	vm_display_channel_peak
+	lea	vm_rgb4_color_table3(pc),a2
+	move.l	cl2_construction2(a3),a4
+	ADDF.W	cl2_extension1+cl2_ext1_COLOR00_3+WORD_SIZE,a4
+	bsr.s	vm_display_channel_peak
+	lea	vm_rgb4_color_table4(pc),a2
+	move.l	cl2_construction2(a3),a4
+	ADDF.W	cl2_extension1+cl2_ext1_COLOR00_4+WORD_SIZE,a4
+	bsr.s	vm_display_channel_peak
+	movem.l	(a7)+,a4-a5
+	rts
+
+; Input
+; a0.l	Volume peak of each channel
+; a2.l	Colour table
+; a4.l	Copperlist
+; a5.l	Constant extension1 size
+; Result
+; no return value
+	CNOP 0,4
+vm_display_channel_peak
+	move.w	(a0),d0			; channel current volume
+	move.w	d0,d1			; store volume
+	MULUF.W	WORD_SIZE,d1		; offset in colour table
+	lea	(a2,d1.w),a1
+	REPT cl2_display_y_size
+	move.w	(a1)+,d2
+	beq.s	vm_display_channel_peak_skip\@
+	move.w	d2,(a4)			; RGB4
+vm_display_channel_peak_skip\@
+	add.l	a5,a4			; next rasterline in cl
+	ENDR
+	tst.w	d0
+	beq.s	vm_display_channel_peak_skip
+	subq.w	#1,d0			; decrement volume peak
+	move.w	d0,(a0)			; store new volume peak
+vm_display_channel_peak_skip
+	addq.w	#WORD_SIZE,a0		; next channel peak
 	rts
 
 
@@ -527,7 +677,7 @@ rgb4_bars_fader_out
 	bne.s	rgb4_bars_fader_out_quit
 	move.w	#bfo_delay,bfo_counter(a3)
 	MOVEF.W bf_rgb4_colors_number*3,d6 ; RGB counter
-	lea	sb_rgb4_color_table+(bf_rgb4_color_table_offset*WORD_SIZE)(pc),a0 ; colors buffer
+	lea	gsb_rgb4_color_table+(bf_rgb4_color_table_offset*WORD_SIZE)(pc),a0 ; colors buffer
 	lea	bfo_rgb4_color_table+(bf_rgb4_color_table_offset*WORD_SIZE)(pc),a1 ; destination colors
 	move.w	#bfo_rgb4_fader_speed<<8,a2 ; increase/decrease red
 	move.w	#bfo_rgb4_fader_speed<<4,a4 ; increase/decrease green
@@ -544,74 +694,78 @@ rgb4_bars_fader_out_quit
 	RGB4_COLOR_FADER bf
 
 
-	INIT_MIRROR_COLOR_TABLE sb,color_values_number1,segments_number1,sb_rgb4_color_table,extra_memory,a3
+	INIT_MIRROR_COLOR_TABLE gsb,color_values_number2,segments_number2,gsb_rgb4_color_table,extra_memory,a3
 
 
 	CNOP 0,4
-sb_get_y_coordinates
+gsb_get_y_coordinates
 	movem.l	a4-a6,-(a7)
-	move.w	sb_y_distance_angle(a3),d2
+	move.w	gsb_y_distance_angle(a3),d2
 	move.w	d2,d0
 	moveq	#pt_defaultticks,d1
 	sub.w	pt_CurrSpeed(a3),d1	; song speed controls y movement speed
 	addq.w	#4,d1			; prevent 0
-	bpl.s	sb_get_y_coordinates_skip1
+	bpl.s	gsb_get_y_coordinates_skip1
 	neg.w	d1
-	bra.s	sb_get_y_coordinates_skip2
+	bra.s	gsb_get_y_coordinates_skip2
 	CNOP 0,4
-sb_get_y_coordinates_skip1
+gsb_get_y_coordinates_skip1
 	MULUF.W 2,d1			; double angle speed for song speed < default
-sb_get_y_coordinates_skip2
+gsb_get_y_coordinates_skip2
 	MULUF.W	WORD_SIZE,d1
 	MOVEF.W (sine_table_length-1)*WORD_SIZE,d5 ; overflow 360°
 	add.w	d1,d0
 	and.w	d5,d0			; remove overflow
-	move.w	d0,sb_y_distance_angle(a3)
-	move.w	sb_y_angle(a3),d3
+	move.w	d0,gsb_y_distance_angle(a3)
+	move.w	gsb_y_angle(a3),d3
 	move.w	d3,d0
 	moveq	#pt_defaultticks,d1
 	sub.w	pt_CurrSpeed(a3),d1	; Song speed controls y movement speed
 	addq.w	#1,d1			; prevent 0
-	bpl.s	sb_get_y_coordinates_skip3
+	bpl.s	gsb_get_y_coordinates_skip3
 	neg.w	d1
-	bra.s	sb_get_y_coordinates_skip4
+	bra.s	gsb_get_y_coordinates_skip4
 	CNOP 0,4
-sb_get_y_coordinates_skip3
+gsb_get_y_coordinates_skip3
 	MULUF.W 2,d1			; double angle speed
-sb_get_y_coordinates_skip4
+gsb_get_y_coordinates_skip4
 	MULUF.W	WORD_SIZE,d1
 	add.w	d1,d0
 	and.w	d5,d0			; remove overflow
-	move.w  d0,sb_y_angle(a3)
-	moveq	#sb_y_distance+sb_y_distance_min,d6
+	move.w  d0,gsb_y_angle(a3)
+	moveq	#gsb_y_distance+gsb_y_distance_min,d6
 	lea	sine_table(pc),a0
-	move.w	#sb_y_center,a1
+	move.w	#gsb_y_center,a1
 	move.l	extra_memory(a3),a4	; colour table
 	move.l	cl2_construction2(a3),a5
-	ADDF.W	cl2_extension1_entry+cl2_ext1_COLOR00+WORD_SIZE,a5
+	ADDF.W	cl2_extension1_entry+WORD_SIZE,a5
 	move.w	#cl2_extension1_size,a6
-	moveq	#sb_bars_number-1,d7
-sb_get_y_coordinates_loop
+	moveq	#gsb_bars_number-1,d7
+gsb_get_y_coordinates_loop
 	move.w	(a0,d2.w),d4		; sin(w)
-	MULSF.W	sb_y_distance*2,d4,d0	; yd' = (yd*sin(w))/2^15
+	MULSF.W	gsb_y_distance*2,d4,d0	; yd' = (yd*sin(w))/2^15
 	swap	d4
 	add.w	d6,d4			; yd' + yd center
 	MULUF.W WORD_SIZE,d4
 	move.w	(a0,d3.w),d0		; sin(w)
-	MULSF.W	sb_y_radius*2,d0,d1	; y' = (yr*sin(w))/2^15
+	MULSF.W	gsb_y_radius*2,d0,d1	; y' = (yr*sin(w))/2^15
 	swap	d0
 	add.w	a1,d0			; y' + y center
 	MULUF.W	cl2_extension1_size,d0,d1
 	lea	(a5,d0.w),a2		; y offset in cl
-	REPT sb_bar_height
-	move.w	(a4)+,(a2)		; RGB4
+	REPT gsb_bar_height
+	move.w	(a4)+,d0		; RGB4
+	move.w	d0,cl2_ext1_COLOR00_1(a2) ; store colours in cl
+	move.w	d0,cl2_ext1_COLOR00_2(a2)
+	move.w	d0,cl2_ext1_COLOR00_3(a2)
+	move.w	d0,cl2_ext1_COLOR00_4(a2)
 	add.l	a6,a2			; next line in cl
 	ENDR
-	addq.w	#sb_y_distance_step*WORD_SIZE,d2
+	addq.w	#gsb_y_distance_step*WORD_SIZE,d2
 	and.w	d5,d2			; remove overflow
 	add.w	d4,d3			; y distance next bar
 	and.w	d5,d3			; remove overflow
-	dbf	d7,sb_get_y_coordinates_loop
+	dbf	d7,gsb_get_y_coordinates_loop
 	movem.l	(a7)+,a4-a6
 	rts
 
@@ -696,17 +850,56 @@ sine_table
 
 	INCLUDE "music-tracker/pt-finetune-starts-table.i"
 
-
-; Sine-Bars
+; Vert-Colorscroll
 	CNOP 0,2
-sb_rgb4_color_table
+vcs_rgb4_color_table
+	INCLUDE "MelODeeFx:colorpalettes/2x64-Colorgradient.ct"
+	dc.w $f0f
+
+; VU-Meter
+	CNOP 0,2
+vm_channels_peak
+	DS.W pt_chansnum
+
+	CNOP 0,2
+vm_rgb4_color_table1
+	REPT cl2_display_y_size
+	DC.W 0
+	ENDR
+	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient1.ct"
+
+	CNOP 0,2
+vm_rgb4_color_table2
+	REPT cl2_display_y_size
+	DC.W 0
+	ENDR
+	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient2.ct"
+
+	CNOP 0,2
+vm_rgb4_color_table3
+	REPT cl2_display_y_size
+	DC.W 0
+	ENDR
+	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient3.ct"
+
+	CNOP 0,2
+vm_rgb4_color_table4
+	REPT cl2_display_y_size
+	DC.W 0
+	ENDR
+	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient4.ct"
+
+
+; Glowing-Sine-Bars
+	CNOP 0,2
+gsb_rgb4_color_table
 	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient1-dark.ct"
 	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient2-dark.ct"
 	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient3-dark.ct"
 	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient4-dark.ct"
 
 	CNOP 0,2
-sb_rgb4_color_table2
+gsb_rgb4_color_table2
 	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient1-bright.ct"
 	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient2-bright.ct"
 	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient3-bright.ct"
@@ -732,9 +925,9 @@ bfo_rgb4_color_table
 
 
 	DC.B "$VER: "
-	DC.B "PT-Sine-Bars2.1-Equalizer "
+	DC.B "CopperFx "
 	DC.B "1.0 "
-	DC.B "(25.10.26)",0
+	DC.B "(1.11.26)",0
 	EVEN
 
 
