@@ -495,7 +495,7 @@ bv_init_object_info_loop
 	addq.w	#2,d0			; number of lines + 1 = number of edge points
 	move.l	a1,(a0)			; edge points table
 	move.w	d0,d1
-	MULUF.W	WORD_SIZE,d1,d2
+	MULUF.W	WORD_SIZE,d1
 	lea	(a1,d1.w),a1		; next edge points table
 	add.l	a2,a0			; next object info structure
 	dbf	d7,bv_init_object_info_loop
@@ -835,10 +835,10 @@ bv_rotate_object_loop
 	move.w	d2,d3			; store z
 	ext.l	d0
 	add.w	a4,d3			; z+d
-	MULUF.L bv_rotation_d,d0,d7	; x projection
+	MULUF.L bv_rotation_d,d0	; x projection
 	ext.l	d1
 	divs.w	d3,d0			; x' = (x*d)/(z+d)
-	MULUF.L bv_rotation_d,d1,d7	; y projection
+	MULUF.L bv_rotation_d,d1	; y projection
 	add.w	a5,d0			; x' + x center
 	move.w	d0,(a1)+		; x position
 	divs.w	d3,d1			; y' = (y*d)/(z+d)
