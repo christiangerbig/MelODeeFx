@@ -14,6 +14,16 @@
 ; Layer 3: Vertical colourscroll
 
 
+; History / Changes
+
+; V.1.0
+; - first release
+
+; V.1.1
+; - all colour gradients changed so that they match the logo colours
+; - Bugfix: macro INIT_MIRROR_COLOR_TABLE started at the wrong line at the end of the colour table
+
+
 ; Execution time 68000: 97 rasterlines
 
 
@@ -175,7 +185,7 @@ ciab_tb_continuous_enabled	EQU FALSE
 beam_position			EQU $135
 
 bplcon0_bits			EQU BPLCON0F_COLOR|BPLCON0F_COLOR|(pf_depth*BPLCON0F_BPU0)
-color00_bits			EQU $012
+color00_bits			EQU $000
 
 cl2_display_x_size		EQU 0
 cl2_display_width		EQU cl2_display_x_size/8
@@ -853,7 +863,7 @@ sine_table
 ; Vert-Colorscroll
 	CNOP 0,2
 vcs_rgb4_color_table
-	INCLUDE "MelODeeFx:colorpalettes/2x64-Colorgradient.ct"
+	INCLUDE "MelODeeFx:colorpalettes/2x64-Colorgradient2.ct" ; blue-white-yellow
 	dc.w $f0f
 
 ; VU-Meter
@@ -866,53 +876,53 @@ vm_rgb4_color_table1
 	REPT cl2_display_y_size
 	DC.W 0
 	ENDR
-	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient1.ct"
+	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient1a.ct" ; blue
 
 	CNOP 0,2
 vm_rgb4_color_table2
 	REPT cl2_display_y_size
 	DC.W 0
 	ENDR
-	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient2.ct"
+	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient2a.ct" ; green
 
 	CNOP 0,2
 vm_rgb4_color_table3
 	REPT cl2_display_y_size
 	DC.W 0
 	ENDR
-	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient3.ct"
+	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient3a.ct" ; red
 
 	CNOP 0,2
 vm_rgb4_color_table4
 	REPT cl2_display_y_size
 	DC.W 0
 	ENDR
-	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient4.ct"
+	INCLUDE "MelODeeFx:colorpalettes/64-Colorgradient4a.ct" ; yellow
 
 
 ; Glowing-Sine-Bars
 	CNOP 0,2
 gsb_rgb4_color_table
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient1-dark.ct"
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient2-dark.ct"
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient3-dark.ct"
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient4-dark.ct"
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient1a-dark.ct" ; blue
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient2a-dark.ct" ; red
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient3a-dark.ct" ; yellow
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient4a-dark.ct" ; green
 
 	CNOP 0,2
 gsb_rgb4_color_table2
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient1-bright.ct"
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient2-bright.ct"
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient3-bright.ct"
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient4-bright.ct"
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient1a-bright.ct" ; blue
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient2a-bright.ct" ; red
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient3a-bright.ct" ; yellow
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient4a-bright.ct" ; green
 
 
 ; Bars-Fader out
 	CNOP 0,2
 bfo_rgb4_color_table
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient1-dark.ct"
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient2-dark.ct"
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient3-dark.ct"
-	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient4-dark.ct"
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient1a-dark.ct" ; blue
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient2a-dark.ct" ; red
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient3a-dark.ct" ; yellow
+	INCLUDE "MelODeeFx:colorpalettes/8-Colorgradient4a-dark.ct" ; green
 
 
 	INCLUDE "sys-variables.i"
@@ -926,8 +936,8 @@ bfo_rgb4_color_table
 
 	DC.B "$VER: "
 	DC.B "CopperFx "
-	DC.B "1.0 "
-	DC.B "(1.11.26)",0
+	DC.B "1.1 "
+	DC.B "(28.11.26)",0
 	EVEN
 
 

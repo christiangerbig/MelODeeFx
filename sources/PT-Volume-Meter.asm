@@ -15,6 +15,12 @@
 ; RMB activates xz center rotation for both objects.
 
 
+; History / Changes
+
+; V.1.0
+; - first release
+
+
 ; Execution time 68000: 227 rasterlines
 
 
